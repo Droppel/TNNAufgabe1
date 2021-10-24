@@ -8,17 +8,19 @@ class Neuron:
         self.weights = weights
         self.inputSize = size(weights)
 
+    # Calculate this neurons output based on a input
     def calc(self, inputs):
         result = 0
         for i, x in enumerate(inputs):
             result += x * self.weights[i]
-        result += self.weights[-1]
+        result += self.weights[-1] # result now equals net_m
         return (fermi(result), result)
     
+    # Train the weights of this neuron based on the given parametes
     def train(self, input, netm, output, teacher, etha):
-        delta = (teacher - output) * fermiDeriv(netm)
+        delta = (teacher - output) * fermiDeriv(netm) # calculate delta using the deltarule for Outputneurons
         ethadelta = etha * delta
-        for w in range(self.inputSize - 1):
+        for w in range(self.inputSize - 1): # Calculate the change for every weight base on delta and etha
             change = ethadelta * input[w]
             self.weights[w] += change
         # Treat bias weight
@@ -31,17 +33,20 @@ class Perzeptron:
         self.outputLayerSize = size(outputNeurons)
         self.etha = etha
 
+    # Calculate the outputs of the Perzeptron given an input
     def calcNet(self, input):
         output = np.empty(self.outputLayerSize)
-        netm = np.empty(self.outputLayerSize)
+        netm = np.empty(self.outputLayerSize) # the method also returns net_m to use in the weightchange step
         for i in range(self.outputLayerSize):
             output[i], netm[i] = self.outputNeurons[i].calc(input)
         return output, netm
     
+    # Train every Neuron of the Perzeptron
     def train(self, input, netm, output, teacher):
         for i in range(self.outputLayerSize):
             self.outputNeurons[i].train(input, netm[i], output[i], teacher[i], self.etha)
     
+    # Store the current weights in a file. Neurons are seperated by new lines and single weights using a " "
     def storeWeights(self, name):
         store = ""
         f = open(name, "w")
@@ -50,7 +55,9 @@ class Perzeptron:
                 store += " " + str(weight)
             store += "\n"
         f.write(store)
-    
+        f.close()
+
+    # Load the weights from a file created using the storeWeights() function
     def loadWeights(self, name):
         with open(name) as file:
             for lineindx, line in enumerate(file):
@@ -58,9 +65,10 @@ class Perzeptron:
                     self.outputNeurons[lineindx].weights[indx] = value
 
 
-
+# The Logistic Function
 def fermi(x):
     return 1 / (1 + math.exp(-1 * x))
 
+# The derivative of the Logistic Function
 def fermiDeriv(x):
     return fermi(x) * (1 - fermi(x))
